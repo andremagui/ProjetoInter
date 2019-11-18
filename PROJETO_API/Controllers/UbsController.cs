@@ -75,7 +75,7 @@ namespace PROJETO_API.Controllers
         }
 
         [HttpPost]
-        public IActionResult Post([FromBody]DependentRequest request)
+        public IActionResult PostDependent([FromBody]DependentRequest request)
         {
             MySqlConnection conn = new MySqlConnection(_appSettings.ConnectionString);
             int DependentID = 0;
@@ -103,6 +103,45 @@ namespace PROJETO_API.Controllers
                 }
 
                 return new OkObjectResult(new DependentResult { DependentID = DependentID, DependentName = request.DependentName, DependentBirth = request.DependentBirth, DependentBlood = request.DependentBlood, DependentAllergy = request.DependentAllergy, DependentSusNo = request.DependentSusNo, UserID = request.UserID });
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+            finally
+            {
+                conn.Dispose();
+                conn.Close();
+            }
+        }
+
+        [HttpPost]
+        public IActionResult PostUser([FromBody]UserRequest request)
+        {
+            MySqlConnection conn = new MySqlConnection(_appSettings.ConnectionString);
+            int UserID = 0;
+
+            try
+            {
+                conn.Open();
+
+                using (MySqlCommand cmd = new MySqlCommand("INSERT INTO User (UserName, UserCpf, UserEmail) VALUES(@UserName, @UserCpf, @UserEmail)", conn))
+                {
+
+                    cmd.Parameters.AddWithValue("@UserName", request.UserName);
+                    cmd.Parameters.AddWithValue("@UserCpf", request.UserCpf);
+                    cmd.Parameters.AddWithValue("@UserEmail", request.UserEmail);
+
+                    cmd.ExecuteNonQuery();
+
+                    using (MySqlCommand cmd2 = new MySqlCommand("SELECT last_insert_id()", conn))
+                    {
+                        UserID = (int)(ulong)cmd2.ExecuteScalar();
+                    }
+                }
+
+                return new OkObjectResult(new UserResult { UserID = UserID, UserName = request.UserName, UserCpf = request.UserCpf, UserEmail = request.UserEmail});
 
             }
             catch (Exception ex)
